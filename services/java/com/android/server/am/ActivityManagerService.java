@@ -138,6 +138,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+// BEGIN privacy-added
+import android.privacy.surrogate.PrivacyActivityManagerService;
+// END privacy-added
 
 public final class ActivityManagerService extends ActivityManagerNative
         implements Watchdog.Monitor, BatteryStatsImpl.BatteryCallback {
@@ -11053,6 +11056,9 @@ public final class ActivityManagerService extends ActivityManagerNative
             }
 
             Object nextReceiver = r.receivers.get(recIdx);
+            // BEGIN privacy-added
+            enforcePrivacyPermission(nextReceiver, r);
+            // END privacy-added
             if (nextReceiver instanceof BroadcastFilter) {
                 // Simple case: this is a registered receiver who gets
                 // a direct call.
@@ -11180,6 +11186,32 @@ public final class ActivityManagerService extends ActivityManagerNative
             mPendingBroadcastRecvIndex = recIdx;
         }
     }
+    // BEGIN privacy-added
+    private void enforcePrivacyPermission(Object nextReceiver, BroadcastRecord r) {
+        if (r != null && r.intent != null && r.intent.getAction() != null) {
+            
+            String packageName = null;
+            int uid = -1;
+            try { // try to get intent receiver information
+                if (nextReceiver instanceof BroadcastFilter) {
+                    packageName = ((BroadcastFilter) nextReceiver).receiverList.app.info.packageName;
+                    uid = ((BroadcastFilter) nextReceiver).receiverList.app.info.uid;
+                } else if (nextReceiver instanceof ResolveInfo) {
+                    packageName = ((ResolveInfo) nextReceiver).activityInfo.applicationInfo.packageName;
+                    uid = ((ResolveInfo) nextReceiver).activityInfo.applicationInfo.uid;
+                }
+            } catch (Exception e) {
+                // if above information is not available, exception will be thrown
+                // do nothing, this is not our intent
+                return;
+            }
+            
+            if (packageName != null && uid != -1) {
+                PrivacyActivityManagerService.enforcePrivacyPermission(packageName, uid, r.intent, mContext, r.receivers.size());
+            }
+        }
+    }
+    // END privacy-added
 
     // =========================================================
     // INSTRUMENTATION

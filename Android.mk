@@ -69,6 +69,7 @@ endif
 ## across process boundaries.
 ##
 ## READ ME: ########################################################
+# BEGIN privacy-added: IPrivacySettingsManager.aidl
 LOCAL_SRC_FILES += \
 	core/java/android/accessibilityservice/IAccessibilityServiceConnection.aidl \
 	core/java/android/accessibilityservice/IEventListener.aidl \
@@ -179,6 +180,7 @@ LOCAL_SRC_FILES += \
 	media/java/android/media/IAudioFocusDispatcher.aidl \
 	media/java/android/media/IMediaScannerListener.aidl \
 	media/java/android/media/IMediaScannerService.aidl \
+	privacy/java/android/privacy/IPrivacySettingsManager.aidl \
 	telephony/java/com/android/internal/telephony/IPhoneStateListener.aidl \
 	telephony/java/com/android/internal/telephony/IPhoneSubInfo.aidl \
 	telephony/java/com/android/internal/telephony/ITelephony.aidl \
@@ -192,6 +194,7 @@ LOCAL_SRC_FILES += \
 	voip/java/android/net/sip/ISipSessionListener.aidl \
 	voip/java/android/net/sip/ISipService.aidl
 #
+# END privacy-added: IPrivacySettingsManager.aidl
 
 
 # FRAMEWORKS_BASE_JAVA_SRC_DIRS comes from build/core/pathmap.mk
@@ -234,6 +237,7 @@ framework_built := $(LOCAL_BUILT_MODULE)
 # AIDL files to be preprocessed and included in the SDK,
 # relative to the root of the build tree.
 # ============================================================
+# BEGIN privacy-added: PrivacySettings.aidl
 aidl_files := \
 	frameworks/base/core/java/android/accounts/IAccountManager.aidl \
 	frameworks/base/core/java/android/accounts/IAccountManagerResponse.aidl \
@@ -273,12 +277,14 @@ aidl_files := \
 	frameworks/base/graphics/java/android/graphics/Region.aidl \
 	frameworks/base/location/java/android/location/Criteria.aidl \
 	frameworks/base/location/java/android/location/Location.aidl \
+	frameworks/base/privacy/java/android/privacy/PrivacySettings.aidl \
 	frameworks/base/telephony/java/android/telephony/ServiceState.aidl \
 	frameworks/base/telephony/java/com/android/internal/telephony/IPhoneSubInfo.aidl \
 	frameworks/base/telephony/java/com/android/internal/telephony/ITelephony.aidl \
 	frameworks/base/vpn/java/android/net/vpn/IVpnService.aidl \
 
 gen := $(TARGET_OUT_COMMON_INTERMEDIATES)/framework.aidl
+# END privacy-added: PrivacySettings.aidl
 $(gen): PRIVATE_SRC_FILES := $(aidl_files)
 ALL_SDK_FILES += $(gen)
 $(gen): $(aidl_files) | $(AIDL)
