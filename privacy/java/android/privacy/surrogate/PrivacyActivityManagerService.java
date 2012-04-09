@@ -12,6 +12,7 @@ import android.util.Log;
 /**
  * Provides privacy handling for {@link com.android.server.am.ActivityManagerService}
  * @author Svyatoslav Hresyk
+ * @hide
  */
 public final class PrivacyActivityManagerService {
     

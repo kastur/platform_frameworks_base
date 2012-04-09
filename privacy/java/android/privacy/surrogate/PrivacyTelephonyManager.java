@@ -20,6 +20,7 @@ import java.util.List;
 /**
  * Provides privacy handling for {@link android.telephony.TelephonyManager}
  * @author Svyatoslav Hresyk
+ * @hide
  */
 public final class PrivacyTelephonyManager extends TelephonyManager {
 
@@ -28,7 +29,7 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
     private Context context;
     
     private PrivacySettingsManager pSetMan;
-    
+
     public PrivacyTelephonyManager(Context context) {
         super(context);
         this.context = context;

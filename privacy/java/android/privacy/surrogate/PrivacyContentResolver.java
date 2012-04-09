@@ -18,6 +18,7 @@ import android.util.Log;
 /**
  * Provides privacy handling for {@link android.content.ContentResolver}
  * @author Svyatoslav Hresyk 
+ * @hide
  */
 public final class PrivacyContentResolver {
     

@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Provides privacy handling for {@link android.accounts.AccountManager}
  * @author Svyatoslav Hresyk
+ * @hide
  */
 public final class PrivacyAccountManager extends AccountManager {
     

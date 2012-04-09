@@ -20,6 +20,7 @@ import android.util.Log;
 /**
  * Provides privacy handling for {@link android.location.LocationManager}
  * @author Svyatoslav Hresyk
+ * @hide
  */
 public final class PrivacyLocationManager extends LocationManager {
 
@@ -32,7 +33,7 @@ public final class PrivacyLocationManager extends LocationManager {
     private PrivacySettingsManager pSetMan;
     
     private Object lock = new Object();
-    
+
     public PrivacyLocationManager(ILocationManager service, Context context) {
         super(service);
         this.context = context;

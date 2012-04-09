@@ -14,6 +14,7 @@ import java.util.Map;
  * Dummy database cursor. Used by {@link android.privacy.surrogate.PrivacyContentResolver} 
  * when access should be blocked without crashing the calling application. 
  * For this purpose none of the methods returns null. 
+ * @hide
  */
 public class PrivacyCursor implements Cursor {
 
