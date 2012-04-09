@@ -1363,6 +1363,16 @@ public abstract class Context {
 
     /**
      * Use with {@link #getSystemService} to retrieve a {@link
+     * android.privacy.PrivacySettingsManager} for controlling
+     * per-application data privacy settings.
+     *
+     * @see #getSystemService
+     * @see android.privacy.PrivacySettingsManager
+     */
+    public static final String PRIVACY_SERVICE = "location";
+
+    /**
+     * Use with {@link #getSystemService} to retrieve a {@link
      * android.app.SearchManager} for handling searches.
      *
      * @see #getSystemService
