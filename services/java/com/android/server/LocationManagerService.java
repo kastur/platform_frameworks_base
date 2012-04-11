@@ -17,6 +17,7 @@
 package com.android.server;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -53,6 +54,8 @@ import android.os.PowerManager;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.WorkSource;
+import android.privacy.PrivacySettings;
+import android.privacy.PrivacySettingsManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.Slog;
@@ -195,17 +198,44 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
         final Object mKey;
         final HashMap<String,UpdateRecord> mUpdateRecords = new HashMap<String,UpdateRecord>();
         int mPendingBroadcasts;
+        Context mContext;
+        int mCallingPid;
+        int mCallingUid;
+        String mCallingPkg;
 
-        Receiver(ILocationListener listener) {
+        Receiver(ILocationListener listener, Context context) {
             mListener = listener;
             mPendingIntent = null;
             mKey = listener.asBinder();
+
+            initializeCalling(context);
         }
 
-        Receiver(PendingIntent intent) {
+        Receiver(PendingIntent intent, Context context) {
             mPendingIntent = intent;
             mListener = null;
             mKey = intent;
+            
+            initializeCalling(context);
+        }
+        
+        void initializeCalling(Context context) {
+            mCallingPid = Binder.getCallingPid();
+            mCallingUid = Binder.getCallingUid();
+            mCallingPkg = null;
+            
+            ActivityManager am = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
+            List<ActivityManager.RunningAppProcessInfo> processes = am.getRunningAppProcesses();
+            for (ActivityManager.RunningAppProcessInfo process : processes) {
+            	if (process.pid == mCallingPid) {
+            		mCallingPkg = process.processName;
+            		break;
+            	}
+            }
+            
+            Log.d(TAG,
+        			"Initialized receiver " +
+					"uid:" + mCallingUid + " pid:" + mCallingPid + " pkg:" + mCallingPkg);
         }
 
         @Override
@@ -297,11 +327,35 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
         }
 
         public boolean callLocationChangedLocked(Location location) {
+        	// Apply instantaneous privacy policy.
+        	PrivacySettingsManager privMan =
+             		(PrivacySettingsManager)mContext.getSystemService(Context.PRIVACY_SERVICE);
+        	PrivacySettings privacy_settings =
+        			privMan.getSettings(mCallingPkg, mCallingUid);
+        	
+        	Log.d(TAG, "callLocationChangedLocked");
+        	
+        	if (privacy_settings == null)
+        		privacy_settings = new PrivacySettings(0, mCallingPkg, mCallingUid);
+
+        	Log.d(TAG,
+        			"Applying instantaneous privacy: " +
+					mCallingPid + ":" + mCallingPkg + " setting: " + privacy_settings.getLocationGpsSetting());
+        	
+            if (privacy_settings.getLocationGpsSetting() == PrivacySettings.EMPTY) return true;
+            if (privacy_settings.getLocationGpsSetting() == PrivacySettings.RANDOM) {
+            	location.setLatitude(Double.parseDouble(privacy_settings.getLocationGpsLat()));
+            	location.setLongitude(Double.parseDouble(privacy_settings.getLocationGpsLat()));
+            }
+            
             if (mListener != null) {
                 try {
                     synchronized (this) {
                         // synchronize to ensure incrementPendingBroadcastsLocked()
                         // is called before decrementPendingBroadcasts()
+                    	
+                    	
+                    	
                         mListener.onLocationChanged(location);
                         if (mListener != mProximityListener) {
                             // call this after broadcasting so we do not increment
@@ -1029,7 +1083,7 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
         IBinder binder = listener.asBinder();
         Receiver receiver = mReceivers.get(binder);
         if (receiver == null) {
-            receiver = new Receiver(listener);
+            receiver = new Receiver(listener, mContext);
             mReceivers.put(binder, receiver);
 
             try {
@@ -1047,7 +1101,7 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
     private Receiver getReceiver(PendingIntent intent) {
         Receiver receiver = mReceivers.get(intent);
         if (receiver == null) {
-            receiver = new Receiver(intent);
+            receiver = new Receiver(intent, mContext);
             mReceivers.put(intent, receiver);
         }
         return receiver;
@@ -1125,6 +1179,7 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
             boolean singleShot, Receiver receiver) {
 
         LocationProviderInterface p = mProvidersByName.get(provider);
+        
         if (p == null) {
             throw new IllegalArgumentException("provider=" + provider);
         }
@@ -1560,7 +1615,7 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
 
         if (mProximityReceiver == null) {
             mProximityListener = new ProximityListener();
-            mProximityReceiver = new Receiver(mProximityListener);
+            mProximityReceiver = new Receiver(mProximityListener, mContext);
 
             for (int i = mProviders.size() - 1; i >= 0; i--) {
                 LocationProviderInterface provider = mProviders.get(i);
