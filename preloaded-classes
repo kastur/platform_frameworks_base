@@ -482,6 +482,8 @@ android.os.SystemProperties
 android.os.UEventObserver
 android.pim.EventRecurrence
 android.preference.PreferenceManager
+android.privacy.PrivacySettingsManager
+android.privacy.PrivacySettings
 android.provider.BaseColumns
 android.provider.Settings$NameValueCache
 android.provider.Settings$NameValueTable

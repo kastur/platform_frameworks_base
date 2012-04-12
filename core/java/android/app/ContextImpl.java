@@ -94,6 +94,8 @@ import android.os.StatFs;
 import android.os.Vibrator;
 import android.os.FileUtils.FileStatus;
 import android.os.storage.StorageManager;
+import android.privacy.IPrivacySettingsManager;
+import android.privacy.PrivacySettingsManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.ClipboardManager;
@@ -208,6 +210,7 @@ class ContextImpl extends Context {
     private UiModeManager mUiModeManager = null;
     private DownloadManager mDownloadManager = null;
     private NfcManager mNfcManager = null;
+    private static PrivacySettingsManager sPrivacySettingsManager = null;
 
     private final Object mSync = new Object();
 
@@ -988,6 +991,8 @@ class ContextImpl extends Context {
             return getDownloadManager();
         } else if (NFC_SERVICE.equals(name)) {
             return getNfcManager();
+        } else if("privacy".equals(name)) {
+            return getPrivacySettingsManager();
         }
 
         return null;
@@ -1233,6 +1238,20 @@ class ContextImpl extends Context {
             }
         }
         return mNfcManager;
+    }
+
+    private PrivacySettingsManager getPrivacySettingsManager() {
+        synchronized (mSync) {
+            if (sPrivacySettingsManager == null ||
+                !sPrivacySettingsManager.isServiceAvailable()) {
+                IBinder b = ServiceManager.getService("privacy");
+                IPrivacySettingsManager service =
+                  IPrivacySettingsManager.Stub.asInterface(b);
+                sPrivacySettingsManager =
+                    new PrivacySettingsManager(getOuterContext(), service);
+            }
+        }
+        return sPrivacySettingsManager;
     }
 
     @Override
