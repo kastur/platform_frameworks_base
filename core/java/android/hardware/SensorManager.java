@@ -16,12 +16,14 @@
 
 package android.hardware;
 
+import android.content.Context;
 import android.os.Looper;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ServiceManager;
+import android.privacy.PrivacySettingsManager;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseBooleanArray;
@@ -356,6 +358,9 @@ public class SensorManager
     /*-----------------------------------------------------------------------*/
 
     Looper mMainLooper;
+    Context mContext;
+    PrivacySettingsManager mPrivMan;
+    
     @SuppressWarnings("deprecation")
     private HashMap<SensorListener, LegacyListener> mLegacyListenersMap =
         new HashMap<SensorListener, LegacyListener>();
@@ -531,6 +536,7 @@ public class SensorManager
                 }
             };
             addSensor(sensor);
+            
         }
 
         protected SensorEvent createSensorEvent() {
@@ -582,7 +588,12 @@ public class SensorManager
         }
 
         void onSensorChangedLocked(Sensor sensor, float[] values, long[] timestamp, int accuracy) {
-            SensorEvent t = getFromPool();
+            if (mPrivMan.anyInSensitive()) {
+            	Log.d(TAG, "Blocked onSensorChanged, in sensitive context.");
+            	return;
+            }
+            
+        	SensorEvent t = getFromPool();
             final float[] v = t.values;
             v[0] = values[0];
             v[1] = values[1];
@@ -600,8 +611,10 @@ public class SensorManager
     /**
      * {@hide}
      */
-    public SensorManager(Looper mainLooper) {
+    public SensorManager(Context context, Looper mainLooper) {
         mMainLooper = mainLooper;
+        mContext = context;
+        mPrivMan = (PrivacySettingsManager) mContext.getSystemService("privacy");
 
 
         synchronized(sListeners) {

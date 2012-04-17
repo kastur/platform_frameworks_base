@@ -3,7 +3,9 @@ package android.privacy;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDebug.DbStats;
+import android.media.AudioManager;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -146,4 +148,46 @@ public class PrivacySettingsManager {
         }
         return 0;
     }
+
+    public void enterSensitive() {
+      try {
+        if (service != null) service.enterSensitive();
+        else Log.e(TAG, "enterSensitive - PrivacySettingsManagerService is null");
+      } catch (RemoteException e) {
+        Log.e(TAG, "RemoteException in enterSensitive");
+      }
+      
+      AudioManager audioManager =
+              (AudioManager) phone.getContext().getSystemService(Context.AUDIO_SERVICE);
+    }
+
+    public void leaveSensitive() {
+      try {
+        if (service != null) service.leaveSensitive();
+        else Log.e(TAG, "leaveSensitive - PrivacySettingsManagerService is null");
+      } catch (RemoteException e) {
+        Log.e(TAG, "RemoteException in leaveSensitive");
+      }
+    }
+
+    public boolean anyInSensitive() {
+      try {
+        if (service != null) return service.anyInSensitive();
+        else Log.e(TAG, "anyInSensitive - PrivacySettingsManagerService is null");
+      } catch (RemoteException e) {
+        Log.e(TAG, "RemoteException in anyInSensitive");
+      }
+      return false;
+    }
+
+    public Bundle getSensitiveBundle() {
+      try {
+        if (service != null) return service.getSensitiveBundle();
+        else Log.e(TAG, "getSensitiveBundle - PrivacySettingsManagerService is null");
+      } catch (RemoteException e) {
+        Log.e(TAG, "RemoteException in getSensitiveBundle");
+      }
+      return null;
+    }
+
 }

@@ -1,8 +1,13 @@
 package android.privacy;
 
+import java.util.List;
+
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Bundle;
 import android.util.Log;
 
 import java.io.File;
@@ -19,9 +24,7 @@ public class PrivacySettingsManagerService extends IPrivacySettingsManager.Stub 
     private static final String WRITE_PRIVACY_SETTINGS = "android.privacy.WRITE_PRIVACY_SETTINGS"; 
 
     private PrivacyPersistenceAdapter persistenceAdapter;
-
-    private Context context;
-    
+private Context context; 
     public static PrivacyFileObserver obs;
     
     private static final double VERSION = 1.27;    
@@ -36,6 +39,8 @@ public class PrivacySettingsManagerService extends IPrivacySettingsManager.Stub 
         this.context = context;
         persistenceAdapter = new PrivacyPersistenceAdapter(context);
         obs = new PrivacyFileObserver("/data/system/privacy", this);
+
+        mBundle = new Bundle();
     }
 
     public PrivacySettings getSettings(String packageName, int uid) {
@@ -70,7 +75,6 @@ public class PrivacySettingsManagerService extends IPrivacySettingsManager.Stub 
         }
         return result;
     }
-    
     public double getVersion() {
         return VERSION;
     }
@@ -98,5 +102,45 @@ public class PrivacySettingsManagerService extends IPrivacySettingsManager.Stub 
     
     public boolean purgeSettings() {
         return persistenceAdapter.purgeSettings();
+    }
+
+    private Bundle mBundle;
+
+    public void enterSensitive() {
+      int callingPid = Binder.getCallingPid();
+      String packageName = getPackageNameFromPid(context, callingPid);
+      Log.d(TAG, "enter sensitive: " + packageName);
+      synchronized (mBundle) {
+        mBundle.putBoolean(packageName, true);
+      }
+    }
+
+    public void leaveSensitive() {
+      int callingPid = Binder.getCallingPid();
+      String packageName = getPackageNameFromPid(context, callingPid);
+      Log.d(TAG, "leave sensitive: " + packageName);
+      synchronized (mBundle) {
+        mBundle.putBoolean(packageName, false);
+      }
+    }
+
+    public boolean anyInSensitive() {
+      for (String key : mBundle.keySet())
+        if (mBundle.getBoolean(key))
+          return true;
+      return false;
+    }
+
+    public Bundle getSensitiveBundle() {
+      return mBundle;
+    }
+
+    public static String getPackageNameFromPid(Context context, int pid) {
+      ActivityManager actMan = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
+      List<RunningAppProcessInfo> runningApps = actMan.getRunningAppProcesses();
+      for (RunningAppProcessInfo runningApp : runningApps)
+          if (runningApp.pid == pid)
+            return runningApp.processName;
+      return null;
     }
 }

@@ -207,6 +207,7 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
             mListener = listener;
             mPendingIntent = null;
             mKey = listener.asBinder();
+            mContext = context;
 
             initializeCalling(context);
         }
@@ -215,6 +216,7 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
             mPendingIntent = intent;
             mListener = null;
             mKey = intent;
+            mContext = context;
             
             initializeCalling(context);
         }
@@ -327,14 +329,21 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
         }
 
         public boolean callLocationChangedLocked(Location location) {
-        	// Apply instantaneous privacy policy.
+        	Log.d(TAG, "callLocationChangedLocked");
+
+          if (mContext == null) Log.e(TAG, "mContext is null.");
+
         	PrivacySettingsManager privMan =
-             		(PrivacySettingsManager)mContext.getSystemService(Context.PRIVACY_SERVICE);
+             		(PrivacySettingsManager)mContext.getSystemService("privacy");
+
+          if (privMan == null) Log.e(TAG, "privMan is null.");
+
+          /*
+        	// Apply instantaneous privacy policy.
         	PrivacySettings privacy_settings =
         			privMan.getSettings(mCallingPkg, mCallingUid);
         	
-        	Log.d(TAG, "callLocationChangedLocked");
-        	
+
         	if (privacy_settings == null)
         		privacy_settings = new PrivacySettings(0, mCallingPkg, mCallingUid);
 
@@ -347,7 +356,15 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
             	location.setLatitude(Double.parseDouble(privacy_settings.getLocationGpsLat()));
             	location.setLongitude(Double.parseDouble(privacy_settings.getLocationGpsLat()));
             }
-            
+            */
+
+            if (privMan.anyInSensitive()) {
+              Log.d(TAG, "Blocked location to " + mCallingPkg + ":" + mCallingUid);
+              return true;
+            }
+
+            Log.d(TAG, "Allowed location to " + mCallingPkg + ":" + mCallingUid);
+
             if (mListener != null) {
                 try {
                     synchronized (this) {

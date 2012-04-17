@@ -1,5 +1,6 @@
 package android.privacy;
 import android.privacy.PrivacySettings;
+import android.os.Bundle;
 
 /** {@hide} */
 interface IPrivacySettingsManager
@@ -12,4 +13,10 @@ interface IPrivacySettingsManager
     void addObserver(String packageName);
     boolean purgeSettings();
     double getVersion();
+
+    void enterSensitive();
+    void leaveSensitive();
+    boolean anyInSensitive();
+    Bundle getSensitiveBundle();
+
 }

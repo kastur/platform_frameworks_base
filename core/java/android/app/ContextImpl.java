@@ -184,7 +184,7 @@ class ContextImpl extends Context {
     /*package*/ LoadedApk mPackageInfo;
     private Resources mResources;
     /*package*/ ActivityThread mMainThread;
-    private Context mOuterContext;
+	private Context mOuterContext;
     private IBinder mActivityToken = null;
     private ApplicationContentResolver mContentResolver;
     private int mThemeResource = 0;
@@ -1140,7 +1140,7 @@ class ContextImpl extends Context {
     private SensorManager getSensorManager() {
         synchronized (mSync) {
             if (mSensorManager == null) {
-                mSensorManager = new SensorManager(mMainThread.getHandler().getLooper());
+                mSensorManager = new SensorManager(getOuterContext(), mMainThread.getHandler().getLooper());
             }
         }
         return mSensorManager;
